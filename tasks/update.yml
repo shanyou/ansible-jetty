@@ -1,0 +1,25 @@
+---
+- name: copy jetty base file
+  synchronize:
+    src="files/app-base/"
+    dest="{{ jetty_base }}/"
+    delete=no
+    recursive=yes
+    archive=no
+    links=yes
+
+- name: Copy Static file template
+  template: src=templates/public.xml.j2 dest="{{ jetty_base }}/webapps/public.xml"
+
+- name: Copy public directory
+  synchronize:
+    src=files/public
+    dest="{{ jetty_static_folder }}/.."
+    delete=yes
+    recursive=yes
+    archive=no
+    links=yes
+
+- name: Check file mod
+  file: path={{ jetty_home }} state=directory owner={{jetty_user}} group={{jetty_user}} recurse=yes
+  notify: restart jetty

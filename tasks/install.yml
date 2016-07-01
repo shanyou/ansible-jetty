@@ -1,0 +1,66 @@
+---
+- name: Create source directory
+  file: path={{ jetty_workdir }} state=directory
+
+- name: Create User
+  user: name={{jetty_user}}
+
+- name: Create jetty base directory
+  file: path={{ jetty_home }} state=directory owner={{jetty_user}} group={{jetty_user}}
+
+- name: Create jetty app directory
+  file: path={{ jetty_base }} state=directory owner={{jetty_user}} group={{jetty_user}}
+
+- name: Create jetty static file directory
+  file: path={{ jetty_static_folder }} state=directory owner={{jetty_user}} group={{jetty_user}}
+
+- name: Download tar file
+  get_url: url="{{ jetty_tar_url }}" dest={{ jetty_workdir }}
+  register: dl_result
+  until: "'OK' in dl_result.msg"
+  retries: 50
+  delay: 10
+
+- name: Extract tar file
+  unarchive: src="{{ jetty_workdir }}/{{ jetty_name }}.tar.gz" dest={{ jetty_workdir }} copy=no
+  register: extract_result
+  ignore_errors: True
+
+- name: Extract tar use command
+  command: "tar zxvf {{ jetty_name }}.tar.gz"
+  args:
+    chdir: "{{ jetty_workdir }}"
+  when: extract_result | failed
+
+
+- name: check jetty download dir exists
+  stat: path={{jetty_workdir}}/{{jetty_name}}
+  register: jetty_stat
+
+- name: copy jetty src to jetty home
+  shell: "\\cp -rf {{ jetty_workdir }}/{{ jetty_name }}/* {{ jetty_home }}/"
+  when: jetty_stat.stat.exists
+
+- name: Check file mod
+  file: path={{ jetty_home }} state=directory owner={{jetty_user}} group={{jetty_user}} recurse=yes
+
+- name: copy default config to /etc/default
+  template: src=templates/jetty.j2 dest=/etc/default/jetty mode=0644
+
+- name: link jetty bin to init.d
+  file: src="{{ jetty_home }}/bin/jetty.sh" dest="/etc/init.d/jetty" state=link
+
+- name: mk jetty startup on
+  shell: "chkconfig --add jetty && chkconfig --level 345 jetty on"
+
+- name: set jetty fact
+  set_fact:
+    jetty:
+      home: "{{ jetty_home }}"
+      version: "{{ jetty_version }}"
+      base: "{{ jetty_base }}"
+      user: "{{jetty_user}}"
+      static: "{{ jetty_static_folder }}"
+
+- name: Install resty fact
+  copy: content="{{ jetty }}" dest=/etc/ansible/facts.d/jetty.fact

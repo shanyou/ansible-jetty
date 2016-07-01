@@ -1,0 +1,14 @@
+---
+# defaults file for jetty
+jetty_name: jetty-distribution-9.3.9.v20160517
+jetty_version: 9.3.9
+jetty_tar_url: "http://10.173.251.156/deploy/{{ jetty_name }}.tar.gz"
+jetty_workdir: /data/app
+
+jetty_home: /data/jetty
+jetty_base: "{{ jetty_home }}/app-base"
+jetty_user: jetty
+jetty_port: 8080
+jetty_host: 0.0.0.0
+jetty_logs: "{{ jetty_home }}/logs"
+jetty_static_folder: "{{ jetty_home }}/public"

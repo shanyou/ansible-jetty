@@ -1,0 +1,4 @@
+---
+# handlers file for jetty
+- name: restart jetty
+  command: "/etc/init.d/jetty restart"

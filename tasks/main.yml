@@ -1,0 +1,8 @@
+---
+# tasks file for jetty
+- include: install.yml
+  when: "ansible_local.jetty is undefined or ansible_local.jetty.home is undefined"
+
+- include: update.yml
+  tags:
+    - update
